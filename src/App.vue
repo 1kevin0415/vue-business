@@ -4,7 +4,7 @@
       <router-link to="/">主页</router-link> |
       <router-link to="/products">商品管理</router-link> |
       <router-link to="/customers">客户管理</router-link> |
-      <a href="#">订单管理</a> |
+      <router-link to="/orders">订单管理</router-link>|
       <a href="#">配送管理</a>
     </nav>
     <router-view/>
@@ -23,6 +23,7 @@ body {
 #app {
   padding: 20px;
 }
+
 
 nav {
   padding: 10px 0 30px 0;

@@ -20,12 +20,29 @@ const routes = [
   {
     path: '/products/edit/:id',
     name: 'edit-product',
-    component: () => import('../views/products/EditProductView.vue') // 修正路径
+    component: () => import('../views/products/EditProductView.vue')
   },
   {
     path: '/customers',
     name: 'customer-management',
-    component: () => import('../views/customers/CustomerManagementView.vue') // 修正路径
+    component: () => import('../views/customers/CustomerManagementView.vue')
+  },
+  // --- 以下是为您新增的路由 ---
+  {
+    path: '/checkout',
+    name: 'checkout',
+    // 这会加载我们刚刚创建的 CheckoutView.vue 文件
+    component: () => import('../views/orders/CheckoutView.vue')
+  },
+  {
+  path: '/orders',
+  name: 'order-management',
+  component: () => import('../views/orders/OrderManagementView.vue')
+  },
+  {
+  path: '/orders/:id', // :id 是一个动态参数
+  name: 'order-detail',
+  component: () => import('../views/orders/OrderDetailView.vue')
   }
 ]
 
