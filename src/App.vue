@@ -5,7 +5,8 @@
       <router-link to="/products">商品管理</router-link> |
       <router-link to="/customers">客户管理</router-link> |
       <router-link to="/orders">订单管理</router-link>|
-      <a href="#">配送管理</a>
+      <router-link to="/deliveries">配送管理</router-link>
+  
     </nav>
     <router-view/>
   </div>

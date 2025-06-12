@@ -43,6 +43,12 @@ const routes = [
   path: '/orders/:id', // :id 是一个动态参数
   name: 'order-detail',
   component: () => import('../views/orders/OrderDetailView.vue')
+  },
+
+  {
+  path: '/deliveries',
+  name: 'delivery-management',
+  component: () => import('../views/deliveries/DeliveryManagementView.vue')
   }
 ]
 
