@@ -4,20 +4,25 @@
 
     <div class="card">
       <h2>为订单发货</h2>
-     <form @submit.prevent="dispatchOrder" class="dispatch-form">
-        <label for="orderId">订单ID</label>
-        <input type="number" id="orderId" v-model.number="newDelivery.orderId" required placeholder="输入需要发货的订单ID">
-
+      <form @submit.prevent="dispatchOrder" class="dispatch-form">
+        <label for="orderId">选择订单</label>
+        <select id="orderId" v-model.number="newDelivery.orderId" required>
+          <option :value="null" disabled>-- 请选择要发货的订单 --</option>
+          <option v-for="order in pendingOrders" :key="order.id" :value="order.id">
+            订单 #{{ order.id }} (客户ID: {{ order.customerId }}, 总额: ¥{{ order.totalPrice }})
+          </option>
+        </select>
+        
         <label for="shippingCompany">物流公司</label>
         <input type="text" id="shippingCompany" v-model="newDelivery.shippingCompany" required placeholder="例如: 顺丰速运">
-
+        
         <label for="trackingNumber">运单号</label>
         <input type="text" id="trackingNumber" v-model="newDelivery.trackingNumber" required>
 
         <div class="form-actions">
-        <button type="submit" class="submit-btn">确认发货</button>
-    </div>
-    </form>
+            <button type="submit" class="submit-btn" :disabled="!newDelivery.orderId">确认发货</button>
+        </div>
+      </form>
     </div>
 
     <div class="card">
@@ -58,7 +63,7 @@
 </template>
 
 <script setup>
-import '@/assets/styles/management.css'; // 复用我们创建的美化样式
+import '@/assets/styles/management.css';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
@@ -70,7 +75,10 @@ const newDelivery = ref({
   trackingNumber: ''
 });
 
-// 获取所有配送列表
+// 新增一个响应式变量，用来存储所有待发货的订单
+const pendingOrders = ref([]);
+
+// 获取所有已创建的配送记录
 async function fetchDeliveries() {
   try {
     loading.value = true;
@@ -84,6 +92,17 @@ async function fetchDeliveries() {
   }
 }
 
+// 新增一个函数，用来获取所有待发货的订单
+async function fetchPendingOrders() {
+    try {
+        // 调用我们新创建的API
+        const response = await axios.get('http://localhost:8080/api/orders?status=待支付');
+        pendingOrders.value = response.data;
+    } catch (error) {
+        console.error('获取待发货订单失败:', error);
+    }
+}
+
 // 为订单发货
 async function dispatchOrder() {
     if (!newDelivery.value.orderId || !newDelivery.value.shippingCompany || !newDelivery.value.trackingNumber) {
@@ -94,10 +113,10 @@ async function dispatchOrder() {
         const response = await axios.post('http://localhost:8080/api/deliveries', newDelivery.value);
         if(response.data && response.data.id) {
             alert(`订单 #${newDelivery.value.orderId} 发货成功！`);
-            // 清空表单
             newDelivery.value = { orderId: null, shippingCompany: '', trackingNumber: '' };
-            // 重新加载列表
+            // 发货成功后，同时刷新配送列表和待发货订单列表
             fetchDeliveries();
+            fetchPendingOrders();
         }
     } catch (error) {
         console.error('发货失败:', error);
@@ -105,8 +124,35 @@ async function dispatchOrder() {
     }
 }
 
-// 组件加载时自动获取列表
+// 组件加载时，需要同时获取两个数据
 onMounted(() => {
   fetchDeliveries();
+  fetchPendingOrders();
 });
 </script>
+
+<style scoped>
+/* 确保Grid布局的表单样式存在 */
+.dispatch-form {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: center;
+}
+.dispatch-form label {
+    font-weight: 600;
+    text-align: right;
+    color: #495057;
+}
+.dispatch-form input, .dispatch-form select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+.dispatch-form .form-actions {
+    grid-column: 2 / 3;
+    justify-content: flex-start;
+}
+</style>

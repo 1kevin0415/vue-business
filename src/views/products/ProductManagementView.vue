@@ -1,29 +1,53 @@
 <template>
-  <div class="product-list-container">
-    <div class="header">
-      <h1>商品列表</h1>
-      <router-link to="/products/add" class="add-btn">+</router-link>
+  <div class="management-container">
+  <div class="page-header">
+    <h1>商品管理</h1>
+    <router-link to="/products/add" class="add-btn">+</router-link>
+  </div>
+
+    <div class="card">
+      <div v-if="loading" class="empty-state">
+        <p class="empty-state-text">加载中...</p>
+      </div>
+      <div v-else-if="products.length > 0">
+        <table class="content-table">
+          <thead>
+            <tr>
+              <th>商品</th>
+              <th>库存</th>
+              <th class="actions-cell">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="product in products" :key="product.id">
+              <td>
+                <div class="item-info">
+                  <img v-if="product.imageUrl" :src="'http://localhost:8080/api/products/images/show/' + product.imageUrl" :alt="product.name" class="item-image">
+                  <div v-else class="item-placeholder">无图</div>
+                  <div class="item-details">
+                    <span class="item-name">{{ product.name }}</span>
+                    <span class="item-price">¥{{ product.price }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="item-stock">{{ product.stock }}</span></td>
+              <td class="actions-cell">
+                  <button class="action-btn edit" @click="editProduct(product.id)">
+                     <i class="fas fa-pencil-alt"></i>
+                  </button>
+                  <button class="action-btn delete" @click="deleteProduct(product.id)">
+                      <i class="fas fa-trash-alt"></i>
+                  </button>
+              </td>   
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <p class="empty-state-text">暂无商品，快去新增一个吧！</p>
+      </div>
     </div>
-
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-if="error" class="error">{{ error }}</div>
-    <ul v-if="products.length > 0">
-      <li v-for="product in products" :key="product.id">
-       <img v-if="product.imageUrl" :src="'http://localhost:8080/api/products/images/show/' + product.imageUrl" :alt="product.name" class="product-image">
-        <div v-else class="product-image placeholder">无图</div>
-
-        <div class="product-info">
-          <span class="name">{{ product.name }}</span>
-          <span class="price">¥ {{ product.price }}</span>
-        </div>
-        <span class="stock">库存: {{ product.stock }}</span>
-        <div class="actions">
-          <button class="edit-btn" @click="editProduct(product)">✏️</button>
-          <button class="delete-btn" @click="deleteProduct(product.id)">🗑️</button>
-        </div>
-      </li>
-    </ul>
-    <div v-else-if="!loading" class="empty">暂无商品</div>
   </div>
 </template>
 
@@ -31,6 +55,7 @@
 import { ref, onMounted, onActivated } from 'vue'; // 导入 onActivated
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import '@/assets/styles/management.css';
 
 const products = ref([]);
 const loading = ref(true);

@@ -6,7 +6,7 @@
         <thead>
           <tr>
             <th>订单ID</th>
-            <th>客户ID</th>
+            <th>客户姓名</th>
             <th>下单日期</th>
             <th>总金额</th>
             <th>状态</th>
@@ -22,15 +22,15 @@
           </tr>
           <tr v-for="order in orders" :key="order.id">
             <td>#{{ order.id }}</td>
-            <td>{{ order.customerId }}</td>
+            <td>{{ order.customerName || 'N/A' }}</td>
             <td>{{ new Date(order.orderDate).toLocaleString() }}</td>
             <td>¥{{ order.totalPrice.toFixed(2) }}</td>
             <td>
               <span class="status-badge" :class="order.status">{{ order.status }}</span>
             </td>
             <td>
-              <router-link :to="'/orders/' + order.id" class="action-btn">
-                查看详情
+             <router-link :to="'/orders/' + order.id" class="action-link-btn">
+                   查看详情
               </router-link>
             </td>
           </tr>
@@ -41,6 +41,8 @@
 </template>
 
 <script setup>
+// 1. 确保导入了共享样式文件
+import '@/assets/styles/management.css';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
@@ -50,6 +52,7 @@ const loading = ref(true);
 async function fetchOrders() {
   try {
     loading.value = true;
+    // 2. 确保调用的是正确的后端接口
     const response = await axios.get('http://localhost:8080/api/orders');
     orders.value = response.data;
   } catch (error) {
@@ -64,4 +67,3 @@ onMounted(() => {
   fetchOrders();
 });
 </script>
-

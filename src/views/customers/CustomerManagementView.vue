@@ -1,34 +1,25 @@
 <template>
   <div class="management-container">
     <h1>客户管理</h1>
-
     <div class="card">
       <h2>新增客户</h2>
-      <form @submit.prevent="addCustomer" class="customer-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="name">姓名</label>
-            <input type="text" id="name" v-model="newCustomer.name" required placeholder="例如: 张三">
-          </div>
-          <div class="form-group">
-            <label for="email">邮箱</label>
-            <input type="email" id="email" v-model="newCustomer.email" required placeholder="example@email.com">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="phone">电话</label>
-            <input type="text" id="phone" v-model="newCustomer.phone" placeholder="可选">
-          </div>
-          <div class="form-group">
-            <label for="address">地址</label>
-            <input type="text" id="address" v-model="newCustomer.address" placeholder="可选">
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="submit-btn">确认新增</button>
-        </div>
-      </form>
+     <form @submit.prevent="addCustomer" class="dispatch-form">
+  <label for="name">姓名</label>
+  <input type="text" id="name" v-model="newCustomer.name" required placeholder="例如: 张三">
+
+  <label for="email">邮箱</label>
+  <input type="email" id="email" v-model="newCustomer.email" required placeholder="example@email.com">
+
+  <label for="phone">电话</label>
+  <input type="text" id="phone" v-model="newCustomer.phone" placeholder="可选">
+
+  <label for="address">地址</label>
+  <input type="text" id="address" v-model="newCustomer.address" placeholder="可选">
+
+  <div class="form-actions">
+    <button type="submit" class="submit-btn">确认新增</button>
+  </div>
+</form>
     </div>
 
     <div class="card">
