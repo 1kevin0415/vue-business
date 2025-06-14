@@ -33,12 +33,12 @@
               <td><span class="item-stock">{{ product.stock }}</span></td>
               <td class="actions-cell">
                   <button class="action-btn edit" @click="editProduct(product.id)">
-                     <i class="fas fa-pencil-alt"></i>
+                      <i class="fas fa-pencil-alt"></i>
                   </button>
                   <button class="action-btn delete" @click="deleteProduct(product.id)">
                       <i class="fas fa-trash-alt"></i>
                   </button>
-              </td>   
+              </td>  
             </tr>
           </tbody>
         </table>
@@ -53,7 +53,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+// 1. 修改导入
+import request from '@/api/request';
 import { useRouter } from 'vue-router';
 import '@/assets/styles/management.css';
 
@@ -65,8 +66,16 @@ const router = useRouter();
 async function fetchProducts() {
   try {
     loading.value = true;
-    const response = await axios.get('http://localhost:8080/api/products');
-    products.value = response.data;
+    // 2. 修改API调用
+    const response = await request.get('/products');
+    
+    // 3. 修改数据解析
+    if (response.data.code === 200) {
+      products.value = response.data.data;
+    } else {
+      throw new Error('无法加载商品数据。');
+    }
+
   } catch (err) {
     error.value = '无法加载商品数据。';
     console.error(err);
@@ -78,8 +87,17 @@ async function fetchProducts() {
 async function deleteProduct(id) {
   if (confirm('您确定要删除这个商品吗？')) {
     try {
-      await axios.delete(`http://localhost:8080/api/products/${id}`);
-      fetchProducts();
+      // 4. 修改API调用
+      const response = await request.delete(`/products/${id}`);
+      
+      // 5. 修改成功判断逻辑
+      if (response.data.code === 200) {
+        alert('删除成功！');
+        fetchProducts(); // 重新加载列表
+      } else {
+        throw new Error('删除失败！');
+      }
+
     } catch (err) {
       alert('删除失败！');
       console.error(err);
@@ -87,7 +105,6 @@ async function deleteProduct(id) {
   }
 }
 
-// MODIFIED: 修正了函数参数，之前是 product 对象，现在直接是 id
 function editProduct(id) {
   router.push(`/products/edit/${id}`);
 }
@@ -96,14 +113,7 @@ onMounted(() => {
   fetchProducts();
 });
 
-// onActivated 在这个组件结构中可能不会被触发，因为没有被 <keep-alive> 包裹
-// 但保留它没有坏处，如果未来添加了 keep-alive 就能生效
-/*
-import { onActivated } from 'vue';
-onActivated(() => {
-  fetchProducts();
-});
-*/
+
 </script>
 
 <style scoped>

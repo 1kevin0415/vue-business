@@ -1,6 +1,8 @@
 <template>
   <div class="management-container">
-    <h1>订单管理</h1>
+    <div class="page-header">
+      <h1>订单管理</h1>
+    </div>
     <div class="card">
       <table class="content-table">
         <thead>
@@ -30,7 +32,7 @@
             </td>
             <td>
              <router-link :to="'/orders/' + order.id" class="action-link-btn">
-                   查看详情
+                  查看详情
               </router-link>
             </td>
           </tr>
@@ -44,7 +46,8 @@
 // 1. 确保导入了共享样式文件
 import '@/assets/styles/management.css';
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+// 2. 将导入从 'axios' 修改为我们自己的 request 实例
+import request from '@/api/request';
 
 const orders = ref([]);
 const loading = ref(true);
@@ -52,9 +55,16 @@ const loading = ref(true);
 async function fetchOrders() {
   try {
     loading.value = true;
-    // 2. 确保调用的是正确的后端接口
-    const response = await axios.get('http://localhost:8080/api/orders');
-    orders.value = response.data;
+    // 3. 使用 request 实例，并简化 URL
+    const response = await request.get('/orders');
+    
+    // 4. 根据我们约定的 ApiResponse 格式，从 response.data.data 中获取订单列表
+    if (response.data.code === 200) {
+      orders.value = response.data.data;
+    } else {
+      throw new Error(response.data.message || '获取订单列表失败');
+    }
+
   } catch (error) {
     console.error('获取订单列表失败:', error);
     alert('获取订单列表失败！');

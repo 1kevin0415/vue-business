@@ -41,7 +41,8 @@
 
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
+// 1. 修改导入
+import request from '@/api/request';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -92,14 +93,21 @@ async function addProduct() {
   }
 
   try {
-    // 发送 FormData 到后端
-    await axios.post('http://localhost:8080/api/products', uploadData, {
+    // 2. 修改API调用：使用 request 实例并简化 URL
+    const response = await request.post('/products', uploadData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    alert('商品添加成功！');
-    router.push('/products');
+
+    // 3. 修改成功判断逻辑
+    if (response.data.code === 200) {
+      alert('商品添加成功！');
+      router.push('/products');
+    } else {
+      throw new Error(response.data.message);
+    }
+
   } catch (err) {
     alert('添加商品失败');
     console.error(err);
@@ -113,8 +121,6 @@ async function addProduct() {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  min-height: 90vh;
-  background-color: #f4f6f9;
   padding: 40px 20px;
 }
 
@@ -126,6 +132,7 @@ async function addProduct() {
   padding: 30px 40px;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
 }
 
 /* 表单标题 */
@@ -200,18 +207,20 @@ async function addProduct() {
 .submit-btn {
   width: 100%;
   padding: 12px;
-  background-color: #42b983;
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
   margin-top: 10px;
 }
 
 .submit-btn:hover {
-  background-color: #36a473;
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>

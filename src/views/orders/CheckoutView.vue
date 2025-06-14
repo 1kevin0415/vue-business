@@ -32,7 +32,8 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import axios from 'axios';
+// 1. 修改导入
+import request from '@/api/request';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -61,14 +62,14 @@ async function placeOrder() {
 
   isSubmitting.value = true;
 
-  // 1. 准备要发送给后端的 orderItems 数组
+  // 准备要发送给后端的 orderItems 数组
   const orderItemsPayload = cartItems.value.map(item => ({
     productId: item.productId,
     quantity: item.quantity,
     price: item.price
   }));
 
-  // 2. 准备完整的订单对象
+  // 准备完整的订单对象
   const orderPayload = {
     customerId: 1, // 暂时硬编码一个客户ID
     totalPrice: totalPrice.value,
@@ -78,16 +79,16 @@ async function placeOrder() {
   };
 
   try {
-    // 3. 调用我们创建的后端API
-    const response = await axios.post('http://localhost:8080/api/orders', orderPayload);
+    // 2. 修改API调用
+    const response = await request.post('/orders', orderPayload);
     
-    // 检查后端返回的数据，确保订单创建成功
-    if (response.data && response.data.id) {
-        alert(`下单成功！订单号: ${response.data.id}`);
+    // 3. 修改成功判断逻辑和数据解析
+    if (response.data.code === 200 && response.data.data && response.data.data.id) {
+        alert(`下单成功！订单号: #${response.data.data.id}`);
         // 成功后可以跳转到订单列表页或订单详情页
         router.push('/products'); // 这里我们先简单跳转回商品列表
     } else {
-        throw new Error('后端未能成功创建订单。');
+        throw new Error(response.data.message || '后端未能成功创建订单。');
     }
 
   } catch (error) {

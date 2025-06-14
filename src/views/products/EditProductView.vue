@@ -46,14 +46,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+// 1. 修改导入
+import request from '@/api/request';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
 const productId = route.params.id;
 
-// 1. 增加一个加载状态变量，默认为 true
 const isLoading = ref(true);
 const formData = ref({});
 const selectedFile = ref(null);
@@ -61,10 +61,12 @@ const previewUrl = ref(null);
 
 onMounted(async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/api/products/${productId}`);
+    // 2. 修改API调用
+    const response = await request.get(`/products/${productId}`);
     
-    if (response.data) {
-      formData.value = response.data;
+    // 3. 修改数据解析
+    if (response.data.code === 200) {
+      formData.value = response.data.data;
     } else {
       alert('找不到该商品的信息，可能已被删除。');
       router.push('/products');
@@ -74,7 +76,6 @@ onMounted(async () => {
     console.error(err);
     router.push('/products');
   } finally {
-    // 2. 无论成功与否（只要没跳转），最后都将加载状态设置为 false
     isLoading.value = false;
   }
 });
@@ -94,8 +95,6 @@ async function updateProduct() {
   uploadData.append('price', formData.value.price);
   uploadData.append('stock', formData.value.stock);
 
-  // 重要：确保这里也使用正确的字段名 imageUrl
-  // 如果不更换图片，需要把旧的图片URL传回，否则后端会把它设为null
   if (formData.value.imageUrl) {
     uploadData.append('imageUrl', formData.value.imageUrl);
   }
@@ -105,11 +104,19 @@ async function updateProduct() {
   }
 
   try {
-    await axios.post(`http://localhost:8080/api/products/update/${productId}`, uploadData, {
+    // 4. 修改API调用
+    const response = await request.post(`/products/update/${productId}`, uploadData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-    alert('商品更新成功！');
-    router.push('/products');
+    
+    // 5. 修改成功判断逻辑
+    if (response.data.code === 200) {
+        alert('商品更新成功！');
+        router.push('/products');
+    } else {
+        throw new Error(response.data.message);
+    }
+    
   } catch (err) {
     alert('更新商品失败');
     console.error(err);
@@ -118,9 +125,8 @@ async function updateProduct() {
 </script>
 
 <style scoped>
-/* 这里的样式与 AddProductView.vue 基本一致，只是按钮颜色不同 */
-.edit-product-container { display: flex; justify-content: center; align-items: flex-start; min-height: 90vh; background-color: #f4f6f9; padding: 40px 20px; }
-.form-card { width: 100%; max-width: 700px; background: #ffffff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); }
+.edit-product-container { display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
+.form-card { width: 100%; max-width: 700px; background: #ffffff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); border: 1px solid #e9ecef;}
 .loading-message { font-size: 18px; color: #555; padding: 50px; }
 .form-title { text-align: center; font-size: 24px; color: #333; margin-bottom: 30px; }
 .form-group { margin-bottom: 20px; }
@@ -133,6 +139,24 @@ async function updateProduct() {
 .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); }
 .form-row { display: flex; gap: 20px; }
 .form-row .form-group { flex: 1; }
-.submit-btn { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background-color 0.3s; margin-top: 10px; }
-.submit-btn:hover { background-color: #0056b3; }
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff; /* 使用一个明确的颜色，以防CSS变量未定义 */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 </style>

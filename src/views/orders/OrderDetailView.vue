@@ -2,9 +2,9 @@
   <div class="management-container">
     <div class="page-header">
         <h1>订单详情</h1>
-        <button @click="goBack" class="back-btn">返回列表</button>
+        <button @click="goBack" class="btn-secondary">返回列表</button>
     </div>
-    <div v-if="loading" class="card empty-state">...</div>
+    <div v-if="loading" class="card empty-state">加载中...</div>
     <div v-else-if="order" class="card order-detail-card">
 
         <div class="detail-grid">
@@ -68,10 +68,11 @@
 </template>
 
 <script setup>
-import '@/assets/styles/management.css'; // 确保引入了共享样式
+import '@/assets/styles/management.css';
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+// 1. 修改导入
+import request from '@/api/request';
 
 const route = useRoute();
 const router = useRouter();
@@ -79,19 +80,20 @@ const order = ref(null);
 const loading = ref(true);
 const orderId = route.params.id;
 
-// --- 新增一个变量来绑定下拉框的值 ---
 const selectedStatus = ref('');
 
 async function fetchOrderDetail() {
   try {
     loading.value = true;
-    const response = await axios.get(`http://localhost:8080/api/orders/${orderId}`);
-    if (response.data) {
-        order.value = response.data;
-        // 将当前订单的状态赋值给下拉框的默认值
-        selectedStatus.value = response.data.status;
+    // 2. 修改API调用
+    const response = await request.get(`/orders/${orderId}`);
+    
+    // 3. 修改数据解析
+    if (response.data.code === 200) {
+        order.value = response.data.data;
+        selectedStatus.value = response.data.data.status;
     } else {
-        alert('找不到该商品的信息，可能已被删除。');
+        alert('找不到该订单的信息，可能已被删除。');
         router.push('/orders');
     }
   } catch (error) {
@@ -103,21 +105,24 @@ async function fetchOrderDetail() {
   }
 }
 
-// --- 新增一个方法用于更新状态 ---
 async function updateStatus() {
     if (!selectedStatus.value) {
         alert('请选择一个新的状态！');
         return;
     }
     try {
-        // 调用我们新创建的后端API
-        const response = await axios.put(`http://localhost:8080/api/orders/${orderId}/status`, {
+        // 4. 修改API调用
+        const response = await request.put(`/orders/${orderId}/status`, {
             status: selectedStatus.value
         });
 
-        // 更新成功后，用后端返回的最新订单数据来更新页面
-        order.value = response.data;
-        alert('订单状态更新成功！');
+        // 5. 修改数据解析和成功判断
+        if (response.data.code === 200) {
+            order.value = response.data.data;
+            alert('订单状态更新成功！');
+        } else {
+            throw new Error(response.data.message);
+        }
 
     } catch (error) {
         console.error('更新订单状态失败:', error);
@@ -137,13 +142,13 @@ onMounted(() => {
 
 <style scoped>
 .order-detail-card {
-    padding-bottom: 0; /* 移除主卡片的下内边距，因为总金额部分会自带外边距 */
+    padding-bottom: 0;
 }
 
 .detail-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* 左侧信息区占2份，右侧操作区占1份 */
-    gap: 40px; /* 两栏之间的间距 */
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
     border-bottom: 1px solid #e9ecef;
     padding-bottom: 30px;
 }
@@ -154,7 +159,7 @@ onMounted(() => {
     font-size: 18px;
     font-weight: 600;
     color: #343a40;
-    border-bottom: none; /* 移除子标题的下划线 */
+    border-bottom: none;
     padding-bottom: 0;
 }
 
@@ -170,13 +175,13 @@ onMounted(() => {
 .info-grid .full-row { grid-column: 1 / -1; }
 
 .actions-section .dispatch-form {
-    display: flex; /* 操作区使用Flex布局更简单 */
+    display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
 .actions-section .form-actions {
-    justify-content: flex-start; /* 按钮靠左 */
+    justify-content: flex-start;
 }
 
 .total-summary {
@@ -187,12 +192,4 @@ onMounted(() => {
 }
 
 .total-price { color: #d9534f; margin-left: 10px; }
-
-.back-btn { /* 返回按钮现在在页面头部，样式可以简化或在management.css中统一 */
-    padding: 8px 18px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-}
-.back-btn:hover { background-color: #5a6268; }
 </style>

@@ -42,7 +42,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+// 1. 将导入从 'axios' 修改为我们自己的 request 实例
+import request from '@/api/request';
 
 const stats = ref({
   productCount: 0,
@@ -54,8 +55,17 @@ const loading = ref(true);
 async function fetchStats() {
   try {
     loading.value = true;
-    const response = await axios.get('http://localhost:8080/api/dashboard/stats');
-    stats.value = response.data;
+    // 2. 使用 request 实例，并且因为 baseURL 已配置，所以地址可以简化
+    const response = await request.get('/dashboard/stats');
+
+    // 3. 后端返回的数据也包含在 data 字段中，所以是 response.data.data
+    //    以匹配我们约定的 ApiResponse 结构
+    if (response.data.code === 200) {
+        stats.value = response.data.data;
+    } else {
+        throw new Error(response.data.message || '获取数据失败');
+    }
+    
   } catch (error) {
     console.error('获取统计数据失败:', error);
     alert('获取仪表盘统计数据失败！');

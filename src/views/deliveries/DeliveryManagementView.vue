@@ -1,7 +1,9 @@
 <template>
   <div class="management-container">
-    <h1>配送管理</h1>
-
+    <div class="page-header">
+      <h1>配送管理</h1>
+    </div>
+    
     <div class="card">
       <h2>为订单发货</h2>
       <form @submit.prevent="dispatchOrder" class="dispatch-form">
@@ -65,7 +67,8 @@
 <script setup>
 import '@/assets/styles/management.css';
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+// 1. 修改导入
+import request from '@/api/request';
 
 const deliveries = ref([]);
 const loading = ref(true);
@@ -82,8 +85,14 @@ const pendingOrders = ref([]);
 async function fetchDeliveries() {
   try {
     loading.value = true;
-    const response = await axios.get('http://localhost:8080/api/deliveries');
-    deliveries.value = response.data;
+    // 2. 修改API调用
+    const response = await request.get('/deliveries');
+    // 3. 修改数据解析
+    if (response.data.code === 200) {
+      deliveries.value = response.data.data;
+    } else {
+      throw new Error(response.data.message);
+    }
   } catch (error) {
     console.error('获取配送列表失败:', error);
     alert('获取配送列表失败！');
@@ -95,9 +104,15 @@ async function fetchDeliveries() {
 // 新增一个函数，用来获取所有待发货的订单
 async function fetchPendingOrders() {
     try {
-        // 调用我们新创建的API
-        const response = await axios.get('http://localhost:8080/api/orders?status=待支付');
-        pendingOrders.value = response.data;
+        // 4. 修改API调用
+        // 注意：这里的"待支付"状态只是一个示例，您可能需要根据实际业务逻辑调整为 "已支付" 等
+       const response = await request.get('/orders?status=已支付');
+        // 5. 修改数据解析
+        if (response.data.code === 200) {
+          pendingOrders.value = response.data.data;
+        } else {
+          throw new Error(response.data.message);
+        }
     } catch (error) {
         console.error('获取待发货订单失败:', error);
     }
@@ -110,13 +125,17 @@ async function dispatchOrder() {
         return;
     }
     try {
-        const response = await axios.post('http://localhost:8080/api/deliveries', newDelivery.value);
-        if(response.data && response.data.id) {
+        // 6. 修改API调用
+        const response = await request.post('/deliveries', newDelivery.value);
+        // 7. 修改成功判断逻辑
+        if(response.data.code === 200) {
             alert(`订单 #${newDelivery.value.orderId} 发货成功！`);
             newDelivery.value = { orderId: null, shippingCompany: '', trackingNumber: '' };
             // 发货成功后，同时刷新配送列表和待发货订单列表
             fetchDeliveries();
             fetchPendingOrders();
+        } else {
+          throw new Error(response.data.message);
         }
     } catch (error) {
         console.error('发货失败:', error);
